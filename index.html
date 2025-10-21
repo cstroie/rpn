@@ -197,6 +197,7 @@
                     <span id="stack-x">0</span>
                 </div>
             </div>
+            <div class="input-display" id="input">0</div>
         </div>
         
         <div class="buttons">
@@ -242,8 +243,8 @@
             document.getElementById('stack-t').textContent = formatNumber(stack[0]);
             document.getElementById('stack-z').textContent = formatNumber(stack[1]);
             document.getElementById('stack-y').textContent = formatNumber(stack[2]);
-            // Show current input in X register when input is active, otherwise show stack value
-            document.getElementById('stack-x').textContent = inputStarted ? currentInput : formatNumber(stack[3]);
+            document.getElementById('stack-x').textContent = formatNumber(stack[3]);
+            document.getElementById('input').textContent = currentInput;
         }
         
         // Format numbers for display
