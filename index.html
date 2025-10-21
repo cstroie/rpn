@@ -197,7 +197,6 @@
                     <span id="stack-x">0</span>
                 </div>
             </div>
-            <div class="input-display" id="input">0</div>
         </div>
         
         <div class="buttons">
@@ -244,7 +243,6 @@
             document.getElementById('stack-z').textContent = formatNumber(stack[1]);
             document.getElementById('stack-y').textContent = formatNumber(stack[2]);
             document.getElementById('stack-x').textContent = formatNumber(stack[3]);
-            document.getElementById('input').textContent = currentInput;
         }
         
         // Format numbers for display
@@ -299,18 +297,17 @@
             updateDisplay();
         }
         
-        // Enter value to stack
+        // Enter value to stack (lifts stack and pushes current input to X)
         function enterValue() {
+            // Lift stack: T=Z, Z=Y, Y=X, X=new value (currentInput)
             stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
             inputStarted = false;
             updateDisplay();
         }
         
-        // Push current input to stack
+        // Push current input to stack (same as ENTER)
         function pushStack() {
-            stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
-            inputStarted = false;
-            updateDisplay();
+            enterValue();
         }
         
         // Clear current input
@@ -348,7 +345,11 @@
         
         // Perform operation
         function performOperation(op) {
-            enterValue(); // Push current input if needed
+            // If we're in the middle of inputting a number, push it to stack first
+            if (inputStarted) {
+                stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
+                inputStarted = false;
+            }
             
             const x = stack[3];
             const y = stack[2];
@@ -375,7 +376,7 @@
                         return;
                 }
                 
-                // Update stack: lift and push result
+                // Update stack: T=Z, Z=Y, Y=result, X=result
                 stack = [stack[1], stack[2], result, result];
                 currentInput = '0';
                 inputStarted = false;
