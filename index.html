@@ -377,8 +377,8 @@
                         return;
                 }
                 
-                // Update stack: T=Z, Z=Y, Y=result, X=result
-                stack = [stack[1], stack[2], result, result];
+                // Update stack: T=Z, Z=Y, Y=X (old X is dropped), X=result
+                stack = [stack[1], stack[2], stack[3], result];
                 currentInput = '0';
                 inputStarted = false;
             } catch (e) {
