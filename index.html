@@ -379,7 +379,7 @@
                         return;
                 }
                 
-                // Update stack: T=Z, Z=Y, Y=X (old X is dropped), X=result
+                // Update stack: Drop T, shift Z->T, Y->Z, X->Y, result->X
                 stack = [stack[1], stack[2], stack[3], result];
                 currentInput = '0';
                 inputStarted = false;
