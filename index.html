@@ -242,7 +242,8 @@
             document.getElementById('stack-t').textContent = formatNumber(stack[0]);
             document.getElementById('stack-z').textContent = formatNumber(stack[1]);
             document.getElementById('stack-y').textContent = formatNumber(stack[2]);
-            document.getElementById('stack-x').textContent = formatNumber(stack[3]);
+            // Show current input in X register when input is active, otherwise show stack value
+            document.getElementById('stack-x').textContent = inputStarted ? currentInput : formatNumber(stack[3]);
         }
         
         // Format numbers for display
