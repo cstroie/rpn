@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP-Style RPN Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            padding: 20px;
+        }
+        
+        .calculator {
+            width: 320px;
+            background-color: #2c3e50;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border: 2px solid #34495e;
+        }
+        
+        .display {
+            background-color: #1a252f;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: right;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #34495e;
+        }
+        
+        .stack-display {
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #95a5a6;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stack-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stack-label {
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        
+        .input-display {
+            font-size: 32px;
+            color: #ecf0f1;
+            min-height: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 12px;
+        }
+        
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+            color: #ecf0f1;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .number {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+        }
+        
+        .number:hover {
+            background: linear-gradient(to bottom, #3ca0db, #2c8bc9);
+        }
+        
+        .operator {
+            background: linear-gradient(to bottom, #e67e22, #d35400);
+        }
+        
+        .operator:hover {
+            background: linear-gradient(to bottom, #e98b39, #d66510);
+        }
+        
+        .function {
+            background: linear-gradient(to bottom, #9b59b6, #8e44ad);
+        }
+        
+        .function:hover {
+            background: linear-gradient(to bottom, #a66bbe, #9551b5);
+        }
+        
+        .enter {
+            background: linear-gradient(to bottom, #27ae60, #229954);
+        }
+        
+        .enter:hover {
+            background: linear-gradient(to bottom, #2cc76d, #25a85c);
+        }
+        
+        .clear {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+        }
+        
+        .clear:hover {
+            background: linear-gradient(to bottom, #ea6153, #c94133);
+        }
+        
+        .wide {
+            grid-column: span 2;
+        }
+        
+        .calculator-title {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .calculator-subtitle {
+            text-align: center;
+            color: #bdc3c7;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .instructions {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            color: #bdc3c7;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .instructions h3 {
+            color: #ecf0f1;
+            margin-bottom: 5px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1 class="calculator-title">RPN Calculator</h1>
+        <p class="calculator-subtitle">Reverse Polish Notation</p>
+        
+        <div class="display">
+            <div class="stack-display">
+                <div class="stack-row">
+                    <span class="stack-label">T:</span>
+                    <span id="stack-t">0</span>
+                </div>
+                <div class="stack-row">
+                    <span class="stack-label">Z:</span>
+                    <span id="stack-z">0</span>
+                </div>
+                <div class="stack-row">
+                    <span class="stack-label">Y:</span>
+                    <span id="stack-y">0</span>
+                </div>
+                <div class="stack-row">
+                    <span class="stack-label">X:</span>
+                    <span id="stack-x">0</span>
+                </div>
+            </div>
+            <div class="input-display" id="input">0</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="function" onclick="clearAll()">CLX</button>
+            <button class="function" onclick="clearEntry()">CE</button>
+            <button class="function" onclick="backspace()">←</button>
+            <button class="function" onclick="pushStack()">ENT</button>
+            
+            <button class="number" onclick="inputDigit('7')">7</button>
+            <button class="number" onclick="inputDigit('8')">8</button>
+            <button class="number" onclick="inputDigit('9')">9</button>
+            <button class="operator" onclick="performOperation('/')">÷</button>
+            
+            <button class="number" onclick="inputDigit('4')">4</button>
+            <button class="number" onclick="inputDigit('5')">5</button>
+            <button class="number" onclick="inputDigit('6')">6</button>
+            <button class="operator" onclick="performOperation('*')">×</button>
+            
+            <button class="number" onclick="inputDigit('1')">1</button>
+            <button class="number" onclick="inputDigit('2')">2</button>
+            <button class="number" onclick="inputDigit('3')">3</button>
+            <button class="operator" onclick="performOperation('-')">−</button>
+            
+            <button class="number" onclick="inputDigit('0')">0</button>
+            <button class="number" onclick="inputDecimal()">.</button>
+            <button class="operator" onclick="changeSign()">±</button>
+            <button class="operator" onclick="performOperation('+')">+</button>
+            
+            <button class="clear wide" onclick="clearStack()">CLEAR</button>
+            <button class="enter wide" onclick="enterValue()">ENTER</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use</h3>
+            <ul>
+                <li>Enter numbers and press ENTER to push to stack</li>
+                <li>Perform operations on the top two stack values (X and Y)</li>
+                <li>CLX clears the current input, CE clears the entire stack</li>
+                <li>Stack values shift down after each operation</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Calculator state
+        let stack = [0, 0, 0, 0]; // T, Z, Y, X registers
+        let currentInput = '0';
+        let inputStarted = false;
+        
+        // Update the display
+        function updateDisplay() {
+            document.getElementById('stack-t').textContent = formatNumber(stack[0]);
+            document.getElementById('stack-z').textContent = formatNumber(stack[1]);
+            document.getElementById('stack-y').textContent = formatNumber(stack[2]);
+            document.getElementById('stack-x').textContent = formatNumber(stack[3]);
+            document.getElementById('input').textContent = currentInput;
+        }
+        
+        // Format numbers for display
+        function formatNumber(num) {
+            // Handle special cases
+            if (isNaN(num)) return 'Error';
+            if (!isFinite(num)) return 'Infinity';
+            
+            // Format to fixed decimal places if needed
+            const str = num.toString();
+            if (str.length > 12) {
+                return num.toExponential(6);
+            }
+            return str;
+        }
+        
+        // Input a digit
+        function inputDigit(digit) {
+            if (!inputStarted) {
+                currentInput = digit;
+                inputStarted = true;
+            } else {
+                if (currentInput === '0') {
+                    currentInput = digit;
+                } else {
+                    currentInput += digit;
+                }
+            }
+            updateDisplay();
+        }
+        
+        // Input decimal point
+        function inputDecimal() {
+            if (!inputStarted) {
+                currentInput = '0.';
+                inputStarted = true;
+            } else if (currentInput.indexOf('.') === -1) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+        
+        // Change sign
+        function changeSign() {
+            if (currentInput !== '0') {
+                if (currentInput.charAt(0) === '-') {
+                    currentInput = currentInput.substring(1);
+                } else {
+                    currentInput = '-' + currentInput;
+                }
+            }
+            updateDisplay();
+        }
+        
+        // Enter value to stack
+        function enterValue() {
+            stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
+            inputStarted = false;
+            updateDisplay();
+        }
+        
+        // Push current input to stack
+        function pushStack() {
+            stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
+            inputStarted = false;
+            updateDisplay();
+        }
+        
+        // Clear current input
+        function clearEntry() {
+            currentInput = '0';
+            inputStarted = false;
+            updateDisplay();
+        }
+        
+        // Clear all (CLX)
+        function clearAll() {
+            currentInput = '0';
+            inputStarted = false;
+            updateDisplay();
+        }
+        
+        // Clear entire stack
+        function clearStack() {
+            stack = [0, 0, 0, 0];
+            currentInput = '0';
+            inputStarted = false;
+            updateDisplay();
+        }
+        
+        // Backspace
+        function backspace() {
+            if (inputStarted && currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+                inputStarted = false;
+            }
+            updateDisplay();
+        }
+        
+        // Perform operation
+        function performOperation(op) {
+            enterValue(); // Push current input if needed
+            
+            const x = stack[3];
+            const y = stack[2];
+            let result;
+            
+            try {
+                switch(op) {
+                    case '+':
+                        result = y + x;
+                        break;
+                    case '-':
+                        result = y - x;
+                        break;
+                    case '*':
+                        result = y * x;
+                        break;
+                    case '/':
+                        if (x === 0) {
+                            throw new Error('Division by zero');
+                        }
+                        result = y / x;
+                        break;
+                    default:
+                        return;
+                }
+                
+                // Update stack: lift and push result
+                stack = [stack[1], stack[2], result, result];
+                currentInput = '0';
+                inputStarted = false;
+            } catch (e) {
+                currentInput = 'Error';
+                inputStarted = false;
+            }
+            
+            updateDisplay();
+        }
+        
+        // Initialize calculator
+        updateDisplay();
+        
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9') {
+                inputDigit(key);
+            } else if (key === '.') {
+                inputDecimal();
+            } else if (key === 'Enter') {
+                enterValue();
+            } else if (key === '+') {
+                performOperation('+');
+            } else if (key === '-') {
+                performOperation('-');
+            } else if (key === '*') {
+                performOperation('*');
+            } else if (key === '/') {
+                performOperation('/');
+            } else if (key === 'Escape') {
+                clearAll();
+            } else if (key === 'Backspace') {
+                backspace();
+            } else if (key === 'c' || key === 'C') {
+                clearStack();
+            }
+        });
+    </script>
+</body>
+</html>
