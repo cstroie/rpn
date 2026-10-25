@@ -1,5 +1,7 @@
 # RPN-4 Scientific Calculator
 
+[![test](https://github.com/cstroie/rpn/actions/workflows/test.yml/badge.svg)](https://github.com/cstroie/rpn/actions/workflows/test.yml)
+
 An HP-style Reverse Polish Notation calculator that runs in the browser. It has a four-level stack, classic stack-lift behaviour, scientific functions, memory registers and undo. There are no dependencies and no build step.
 
 **Live demo: https://cstroie.github.io/rpn/**
@@ -64,6 +66,14 @@ Gold labels are second functions: press **SHIFT** (or `f`), then the key.
   console.log(format(c.x)); // 7
   ```
 - `index.html` holds the user interface.
+
+## Tests
+
+```
+node --test
+```
+
+The tests run the calculator engine under Node (version 18 or later) with no dependencies. GitHub Actions runs them on every push.
 
 ## License
 
