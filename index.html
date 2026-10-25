@@ -58,7 +58,6 @@
 
         .brand {
             display: flex;
-            justify-content: space-between;
             align-items: baseline;
             margin: 0 4px 12px;
             letter-spacing: 3px;
@@ -67,7 +66,21 @@
             color: var(--gold);
         }
 
-        .brand span { color: var(--text-dim); letter-spacing: 2px; font-weight: 500; }
+        .brand span { color: var(--text-dim); letter-spacing: 2px; font-weight: 500; margin-right: auto; margin-left: 10px; }
+
+        .share {
+            font: inherit;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: var(--text-dim);
+            background: none;
+            border: 1px solid var(--body-edge);
+            border-radius: 4px;
+            padding: 1px 7px;
+            cursor: pointer;
+        }
+
+        .share:hover { color: var(--gold); border-color: var(--gold); }
 
         /* ---- LCD ---- */
 
@@ -219,7 +232,7 @@
 </head>
 <body>
     <div class="calc">
-        <div class="brand">RPN-4 <span>SCIENTIFIC</span></div>
+        <div class="brand">RPN-4 <span>SCIENTIFIC</span><button class="share" id="shareBtn" title="Copy a link to this stack and memory">SHARE</button></div>
 
         <div class="lcd" id="lcd" title="Click to copy X">
             <div class="flags">
@@ -442,6 +455,57 @@
             });
 
             $('lcd').addEventListener('click', copyX);
+
+            // ---- share by link ----
+
+            /** Text -> URL-safe string, deflated when the browser supports it. */
+            async function packText(text) {
+                let bytes = new TextEncoder().encode(text);
+                let tag = 'b';
+                if (window.CompressionStream) {
+                    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+                    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+                    tag = 'z';
+                }
+                let bin = '';
+                bytes.forEach(b => { bin += String.fromCharCode(b); });
+                return tag + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            }
+
+            async function unpackText(packed) {
+                const bin = atob(packed.slice(1).replace(/-/g, '+').replace(/_/g, '/'));
+                let bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+                if (packed[0] === 'z') {
+                    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                    bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+                }
+                return new TextDecoder().decode(bytes);
+            }
+
+            $('shareBtn').addEventListener('click', async () => {
+                const url = location.href.split('#')[0] + '#state=' + await packText(calc.serialize());
+                window.history.replaceState(null, '', url);
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showFlash('LINK COPIED');
+                } catch (e) {
+                    showFlash('LINK IN ADDRESS BAR');
+                }
+                render();
+            });
+
+            async function loadShared() {
+                const m = /[#&]state=([A-Za-z0-9_-]+)/.exec(location.hash);
+                if (!m) return;
+                window.history.replaceState(null, '', location.href.split('#')[0]);
+                let ok = false;
+                try { ok = calc.load(await unpackText(m[1])); } catch (e) { /* bad link */ }
+                showFlash(ok ? 'SHARED STATE' : 'BAD LINK');
+                render();
+            }
+
+            window.addEventListener('hashchange', loadShared);
+            loadShared();
 
             render();
         })();

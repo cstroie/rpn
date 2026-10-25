@@ -37,6 +37,7 @@ The stack behaves like an HP calculator:
 - **Errors:** errors such as divide by zero or the square root of a negative number are shown on the display, and the stack is left unchanged.
 - **Persistence:** the stack, memories and angle mode are kept between visits.
 - **Clipboard:** click the display or press `Ctrl+C` to copy X. `Ctrl+V` pastes a number into X.
+- **Share:** the **SHARE** button copies a link with the stack, memories and angle mode packed into the address.
 
 Gold labels are second functions: press **SHIFT** (or `f`), then the key.
 
