@@ -3,423 +3,448 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HP-Style RPN Calculator</title>
+    <title>RPN Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --page: #1b1a18;
+            --body: #2b2925;
+            --body-edge: #45413a;
+            --face: #1f1d1a;
+            --gold: #e2a93b;
+            --blue: #5fb3e8;
+            --key: #3a3732;
+            --key-top: #4a463f;
+            --key-ink: #f2ede3;
+            --key-shade: #121110;
+            --num: #5a554c;
+            --num-top: #6b655a;
+            --enter: #c8781c;
+            --enter-top: #dd8c2c;
+            --lcd: #b7bf9a;
+            --lcd-dark: #9aa47c;
+            --lcd-ink: #22261a;
+            --lcd-faint: rgba(34, 38, 26, 0.45);
+            --text: #d8d2c4;
+            --text-dim: #8d8679;
         }
-        
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-            padding: 20px;
-        }
-        
-        .calculator {
-            width: 320px;
-            background-color: #2c3e50;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            border: 2px solid #34495e;
-        }
-        
-        .display {
-            background-color: #1a252f;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: right;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-            border: 1px solid #34495e;
-        }
-        
-        .stack-display {
-            height: 100px;
+            background: radial-gradient(ellipse at 50% 0%, #2c2a26, var(--page) 70%) fixed;
+            background-color: var(--page);
+            color: var(--text);
+            font-family: 'Barlow Condensed', system-ui, sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            color: #95a5a6;
-            font-size: 14px;
-            margin-bottom: 10px;
+            align-items: center;
+            padding: 32px 16px;
+            gap: 24px;
         }
-        
-        .stack-row {
+
+        .calc {
+            width: 100%;
+            max-width: 380px;
+            background: linear-gradient(180deg, #34312c, var(--body));
+            border: 1px solid var(--body-edge);
+            border-radius: 22px;
+            padding: 20px 18px 22px;
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 24px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        .brand {
             display: flex;
             justify-content: space-between;
+            align-items: baseline;
+            margin: 0 4px 12px;
+            letter-spacing: 3px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gold);
         }
-        
-        .stack-label {
-            font-weight: bold;
-            color: #7f8c8d;
+
+        .brand span { color: var(--text-dim); letter-spacing: 2px; font-weight: 500; }
+
+        /* ---- LCD ---- */
+
+        .lcd {
+            background: linear-gradient(180deg, var(--lcd), var(--lcd-dark));
+            border-radius: 8px;
+            padding: 10px 14px 12px;
+            box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.45), 0 0 0 6px var(--face);
+            color: var(--lcd-ink);
+            font-family: 'Share Tech Mono', ui-monospace, monospace;
+            cursor: copy;
+            user-select: none;
+            margin: 6px 6px 22px;
         }
-        
-        .input-display {
-            font-size: 32px;
-            color: #ecf0f1;
-            min-height: 40px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+
+        .flags {
+            display: flex;
+            gap: 10px;
+            font-size: 11px;
+            letter-spacing: 1px;
+            height: 14px;
+            color: var(--lcd-ink);
         }
-        
-        .buttons {
+
+        .flags span { opacity: 0.12; }
+        .flags span.on { opacity: 1; }
+        .flags .msg { margin-left: auto; opacity: 1; }
+
+        .reg {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            line-height: 1.35;
+            color: var(--lcd-faint);
+        }
+
+        .reg b { font-weight: normal; width: 1.5em; }
+        .reg .val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .reg.x {
+            font-size: 34px;
+            line-height: 1.15;
+            color: var(--lcd-ink);
+            margin-top: 2px;
+        }
+
+        .reg.x b { font-size: 15px; align-self: flex-end; padding-bottom: 6px; color: var(--lcd-faint); }
+        .reg.x.typing .val::after { content: '_'; animation: blink 1s steps(1) infinite; }
+        .reg.x.error .val { font-size: 26px; letter-spacing: 1px; }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* ---- keys ---- */
+
+        .keys {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-gap: 12px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px 9px;
         }
-        
-        button {
-            border: none;
-            border-radius: 8px;
-            padding: 15px 0;
-            font-size: 18px;
-            font-weight: bold;
+
+        .key {
+            position: relative;
+            height: 44px;
+            border: 0;
+            border-radius: 7px;
+            background: linear-gradient(180deg, var(--key-top), var(--key));
+            color: var(--key-ink);
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
-            color: #ecf0f1;
+            box-shadow: 0 3px 0 var(--key-shade), 0 4px 6px rgba(0, 0, 0, 0.35);
+            transition: transform 0.04s, box-shadow 0.04s, filter 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
-        }
-        
-        .number {
-            background: linear-gradient(to bottom, #3498db, #2980b9);
-        }
-        
-        .number:hover {
-            background: linear-gradient(to bottom, #3ca0db, #2c8bc9);
-        }
-        
-        .operator {
-            background: linear-gradient(to bottom, #e67e22, #d35400);
-        }
-        
-        .operator:hover {
-            background: linear-gradient(to bottom, #e98b39, #d66510);
-        }
-        
-        .function {
-            background: linear-gradient(to bottom, #9b59b6, #8e44ad);
-        }
-        
-        .function:hover {
-            background: linear-gradient(to bottom, #a66bbe, #9551b5);
-        }
-        
-        .enter {
-            background: linear-gradient(to bottom, #27ae60, #229954);
-        }
-        
-        .enter:hover {
-            background: linear-gradient(to bottom, #2cc76d, #25a85c);
-        }
-        
-        .clear {
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
-        }
-        
-        .clear:hover {
-            background: linear-gradient(to bottom, #ea6153, #c94133);
-        }
-        
-        .wide {
-            grid-column: span 2;
-        }
-        
-        .calculator-title {
-            text-align: center;
-            color: #ecf0f1;
-            margin-bottom: 15px;
-            font-size: 24px;
-            text-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
-        }
-        
-        .calculator-subtitle {
-            text-align: center;
-            color: #bdc3c7;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-        
-        .instructions {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 20px;
-            color: #bdc3c7;
+
+        .key:hover { filter: brightness(1.1); }
+        .key:active, .key.pressed { transform: translateY(3px); box-shadow: 0 0 0 var(--key-shade); }
+        .key:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+        /* shifted label printed above the key */
+        .key[data-alt]::before {
+            content: attr(data-alt);
+            position: absolute;
+            left: 0; right: 0;
+            top: -16px;
             font-size: 12px;
-            line-height: 1.4;
+            font-weight: 600;
+            color: var(--gold);
+            pointer-events: none;
+            white-space: nowrap;
         }
-        
-        .instructions h3 {
-            color: #ecf0f1;
-            margin-bottom: 5px;
+
+        .key.num { background: linear-gradient(180deg, var(--num-top), var(--num)); font-size: 21px; }
+        .key.enter { grid-column: span 2; background: linear-gradient(180deg, var(--enter-top), var(--enter)); letter-spacing: 2px; }
+        .key.shift { background: linear-gradient(180deg, #f0bc55, var(--gold)); color: #2a1f08; }
+        .key.small { font-size: 15px; }
+        .key.op { font-size: 26px; font-weight: 500; }
+
+        body.shifted .key[data-alt]:not(.enter) { color: var(--gold); }
+        body.shifted .key.enter { color: #3a2204; }
+        body.shifted .key[data-alt]::before { color: var(--key-ink); }
+        body.shifted .key.shift { filter: brightness(1.2); box-shadow: 0 0 0 2px #fff3d6, 0 3px 0 var(--key-shade); }
+        body.pending .key.num { box-shadow: 0 0 0 2px var(--blue), 0 3px 0 var(--key-shade); }
+
+        sub, sup { font-size: 0.65em; line-height: 0; }
+
+        /* ---- help ---- */
+
+        .help {
+            width: 100%;
+            max-width: 380px;
+            font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-dim);
         }
-        
-        .instructions ul {
-            padding-left: 20px;
+
+        .help summary {
+            cursor: pointer;
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: 1px;
         }
-        
-        .instructions li {
-            margin-bottom: 3px;
+
+        .help h3 { color: var(--text); font-size: 15px; margin: 14px 0 4px; letter-spacing: 1px; }
+        .help p { margin-bottom: 6px; }
+        .help table { width: 100%; border-collapse: collapse; }
+        .help td { padding: 2px 0; vertical-align: top; }
+        .help td:first-child { width: 42%; }
+        kbd {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 13px;
+            color: var(--text);
+            background: var(--key);
+            border-radius: 3px;
+            padding: 0 5px;
+        }
+
+        @media (max-width: 400px) {
+            body { padding: 16px 10px; }
+            .calc { padding: 16px 12px 18px; border-radius: 18px; }
+            .keys { gap: 17px 7px; }
+            .key { height: 42px; font-size: 16px; }
+            .key.num { font-size: 19px; }
+            .reg.x { font-size: 30px; }
         }
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <h1 class="calculator-title">RPN Calculator</h1>
-        
-        <div class="display">
-            <div class="stack-display">
-                <div class="stack-row">
-                    <span class="stack-label">T:</span>
-                    <span id="stack-t">0</span>
-                </div>
-                <div class="stack-row">
-                    <span class="stack-label">Z:</span>
-                    <span id="stack-z">0</span>
-                </div>
-                <div class="stack-row">
-                    <span class="stack-label">Y:</span>
-                    <span id="stack-y">0</span>
-                </div>
-                <div class="stack-row">
-                    <span class="stack-label">X:</span>
-                    <span id="stack-x">0</span>
-                </div>
+    <div class="calc">
+        <div class="brand">RPN-4 <span>SCIENTIFIC</span></div>
+
+        <div class="lcd" id="lcd" title="Click to copy X">
+            <div class="flags">
+                <span id="fShift">SHIFT</span>
+                <span id="fAngle" class="on">DEG</span>
+                <span id="fPending">STO</span>
+                <span class="msg" id="fMsg"></span>
             </div>
-            <div class="input-display" id="input">0</div>
+            <div class="reg"><b>T</b><span class="val" id="rT">0</span></div>
+            <div class="reg"><b>Z</b><span class="val" id="rZ">0</span></div>
+            <div class="reg"><b>Y</b><span class="val" id="rY">0</span></div>
+            <div class="reg x" id="xRow"><b>X</b><span class="val" id="rX">0</span></div>
         </div>
-        
-        <div class="buttons">
-            <button class="function" onclick="clearAll()">CLX</button>
-            <button class="function" onclick="clearEntry()">CE</button>
-            <button class="function" onclick="backspace()">←</button>
-            <button class="function" onclick="pushStack()">ENT</button>
-            
-            <button class="number" onclick="inputDigit('7')">7</button>
-            <button class="number" onclick="inputDigit('8')">8</button>
-            <button class="number" onclick="inputDigit('9')">9</button>
-            <button class="operator" onclick="performOperation('/')">÷</button>
-            
-            <button class="number" onclick="inputDigit('4')">4</button>
-            <button class="number" onclick="inputDigit('5')">5</button>
-            <button class="number" onclick="inputDigit('6')">6</button>
-            <button class="operator" onclick="performOperation('*')">×</button>
-            
-            <button class="number" onclick="inputDigit('1')">1</button>
-            <button class="number" onclick="inputDigit('2')">2</button>
-            <button class="number" onclick="inputDigit('3')">3</button>
-            <button class="operator" onclick="performOperation('-')">−</button>
-            
-            <button class="number" onclick="inputDigit('0')">0</button>
-            <button class="number" onclick="inputDecimal()">.</button>
-            <button class="operator" onclick="changeSign()">±</button>
-            <button class="operator" onclick="performOperation('+')">+</button>
-            
-            <button class="clear wide" onclick="clearStack()">CLEAR</button>
-            <button class="enter wide" onclick="enterValue()">ENTER</button>
+
+        <div class="keys" id="keys">
+            <button class="key" data-op="sqrt" data-alt="x²" data-alt-op="sq">√x</button>
+            <button class="key" data-op="pow" data-alt="ˣ√y" data-alt-op="root">y<sup>x</sup></button>
+            <button class="key" data-op="inv" data-alt="n!" data-alt-op="fact">1/x</button>
+            <button class="key" data-op="ln" data-alt="eˣ" data-alt-op="exp">LN</button>
+            <button class="key" data-op="log" data-alt="10ˣ" data-alt-op="pow10">LOG</button>
+
+            <button class="key" data-op="sin" data-alt="SIN⁻¹" data-alt-op="asin">SIN</button>
+            <button class="key" data-op="cos" data-alt="COS⁻¹" data-alt-op="acos">COS</button>
+            <button class="key" data-op="tan" data-alt="TAN⁻¹" data-alt-op="atan">TAN</button>
+            <button class="key" data-act="swap" data-alt="π" data-alt-op="pi">x↔y</button>
+            <button class="key" data-act="rollDown" data-alt="R↑" data-alt-act="rollUp">R↓</button>
+
+            <button class="key enter" data-act="enter" data-alt="LAST x" data-alt-act="lastx">ENTER</button>
+            <button class="key" data-act="chs" data-alt="ABS" data-alt-op="abs">CHS</button>
+            <button class="key" data-act="eex" data-alt="DEG/RAD" data-alt-act="toggleAngle">EEX</button>
+            <button class="key" data-act="backspace" data-alt="CLX" data-alt-act="clx">⌫</button>
+
+            <button class="key shift" data-act="shift">SHIFT</button>
+            <button class="key num" data-digit="7">7</button>
+            <button class="key num" data-digit="8">8</button>
+            <button class="key num" data-digit="9">9</button>
+            <button class="key op" data-op="/" data-alt="%" data-alt-op="%">÷</button>
+
+            <button class="key small" data-act="undo">UNDO</button>
+            <button class="key num" data-digit="4">4</button>
+            <button class="key num" data-digit="5">5</button>
+            <button class="key num" data-digit="6">6</button>
+            <button class="key op" data-op="*">×</button>
+
+            <button class="key small" data-act="sto">STO</button>
+            <button class="key num" data-digit="1">1</button>
+            <button class="key num" data-digit="2">2</button>
+            <button class="key num" data-digit="3">3</button>
+            <button class="key op" data-op="-">−</button>
+
+            <button class="key small" data-act="rcl" data-alt="CLR ALL" data-alt-act="clearAll">RCL</button>
+            <button class="key num" data-digit="0">0</button>
+            <button class="key num" data-act="point">.</button>
+            <button class="key small" data-act="clx">CLX</button>
+            <button class="key op" data-op="+">+</button>
         </div>
-        
     </div>
 
+    <details class="help">
+        <summary>HOW TO USE</summary>
+        <h3>RPN IN ONE MINUTE</h3>
+        <p>Enter the numbers first, then the operation. <b>2 ENTER 3 +</b> gives 5. For (3 + 4) × 5, press <b>3 ENTER 4 + 5 ×</b>. You never need brackets or an equals key.</p>
+        <p>ENTER copies X into Y. An operation uses X and Y, and the stack drops: Z moves to Y, and T is copied into Z. Gold labels are second functions: press SHIFT, then the key.</p>
+        <p>To store, press <b>STO</b> then a digit 0–9. <b>RCL</b> then a digit recalls it. Click the display to copy X. Your stack and memories are kept between visits.</p>
+        <h3>KEYBOARD</h3>
+        <table>
+            <tr><td><kbd>0</kbd>–<kbd>9</kbd> <kbd>.</kbd></td><td>digits</td></tr>
+            <tr><td><kbd>Enter</kbd></td><td>ENTER</td></tr>
+            <tr><td><kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd> <kbd>^</kbd> <kbd>%</kbd></td><td>arithmetic, y<sup>x</sup>, percent</td></tr>
+            <tr><td><kbd>Backspace</kbd></td><td>delete digit / CLX</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>CLX (cancel STO/RCL)</td></tr>
+            <tr><td><kbd>Delete</kbd></td><td>clear everything</td></tr>
+            <tr><td><kbd>n</kbd> / <kbd>e</kbd></td><td>CHS / EEX</td></tr>
+            <tr><td><kbd>s</kbd> <kbd>r</kbd> <kbd>l</kbd></td><td>x↔y, R↓, LAST x</td></tr>
+            <tr><td><kbd>q</kbd> <kbd>i</kbd> <kbd>p</kbd></td><td>√x, 1/x, π</td></tr>
+            <tr><td><kbd>Shift</kbd> <kbd>Tab</kbd> / <kbd>f</kbd></td><td>SHIFT</td></tr>
+            <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>undo</td></tr>
+            <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd></td><td>copy X / paste a number</td></tr>
+        </table>
+    </details>
+
+    <script src="rpn.js"></script>
     <script>
-        // Calculator state
-        let stack = [0, 0, 0, 0]; // T, Z, Y, X registers
-        let currentInput = '0';
-        let inputStarted = false;
-        
-        // Update the display
-        function updateDisplay() {
-            document.getElementById('stack-t').textContent = formatNumber(stack[0]);
-            document.getElementById('stack-z').textContent = formatNumber(stack[1]);
-            document.getElementById('stack-y').textContent = formatNumber(stack[2]);
-            document.getElementById('stack-x').textContent = formatNumber(stack[3]);
-            document.getElementById('input').textContent = currentInput;
-        }
-        
-        // Format numbers for display
-        function formatNumber(num) {
-            // Handle special cases
-            if (isNaN(num)) return 'Error';
-            if (!isFinite(num)) return 'Infinity';
-            
-            // Format to fixed decimal places if needed
-            const str = num.toString();
-            if (str.length > 12) {
-                return num.toExponential(6);
-            }
-            return str;
-        }
-        
-        // Input a digit
-        function inputDigit(digit) {
-            if (!inputStarted) {
-                currentInput = digit;
-                inputStarted = true;
-            } else {
-                if (currentInput === '0') {
-                    currentInput = digit;
-                } else {
-                    currentInput += digit;
-                }
-            }
-            updateDisplay();
-        }
-        
-        // Input decimal point
-        function inputDecimal() {
-            if (!inputStarted) {
-                currentInput = '0.';
-                inputStarted = true;
-            } else if (currentInput.indexOf('.') === -1) {
-                currentInput += '.';
-            }
-            updateDisplay();
-        }
-        
-        // Change sign
-        function changeSign() {
-            if (currentInput !== '0') {
-                if (currentInput.charAt(0) === '-') {
-                    currentInput = currentInput.substring(1);
-                } else {
-                    currentInput = '-' + currentInput;
-                }
-            }
-            updateDisplay();
-        }
-        
-        // Enter value to stack (lifts stack and pushes current input to X)
-        function enterValue() {
-            // Lift stack: T=Z, Z=Y, Y=X, X=new value (currentInput)
-            stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
-            currentInput = '0';
-            inputStarted = false;
-            updateDisplay();
-        }
-        
-        // Push current input to stack (same as ENTER)
-        function pushStack() {
-            enterValue();
-        }
-        
-        // Clear current input
-        function clearEntry() {
-            currentInput = '0';
-            inputStarted = false;
-            updateDisplay();
-        }
-        
-        // Clear all (CLX)
-        function clearAll() {
-            currentInput = '0';
-            inputStarted = false;
-            updateDisplay();
-        }
-        
-        // Clear entire stack
-        function clearStack() {
-            stack = [0, 0, 0, 0];
-            currentInput = '0';
-            inputStarted = false;
-            updateDisplay();
-        }
-        
-        // Backspace
-        function backspace() {
-            if (inputStarted && currentInput.length > 1) {
-                currentInput = currentInput.slice(0, -1);
-            } else {
-                currentInput = '0';
-                inputStarted = false;
-            }
-            updateDisplay();
-        }
-        
-        // Perform operation
-        function performOperation(op) {
-            // If we're in the middle of inputting a number, push it to stack first
-            if (inputStarted) {
-                stack = [stack[1], stack[2], stack[3], parseFloat(currentInput)];
-                inputStarted = false;
-            }
-            
-            const x = stack[3];
-            const y = stack[2];
-            let result;
-            
+        (() => {
+            const { RPN, format, displayX } = window.RPNCore;
+            const SAVE_KEY = 'rpn_state';
+            const calc = new RPN();
+            let shifted = false;
+            let flash = '';
+            let flashTimer = null;
+
+            const $ = id => document.getElementById(id);
+
             try {
-                switch(op) {
-                    case '+':
-                        result = y + x;
-                        break;
-                    case '-':
-                        result = y - x;
-                        break;
-                    case '*':
-                        result = y * x;
-                        break;
-                    case '/':
-                        if (x === 0) {
-                            throw new Error('Division by zero');
-                        }
-                        result = y / x;
-                        break;
-                    default:
-                        return;
+                const saved = localStorage.getItem(SAVE_KEY);
+                if (saved) calc.load(saved);
+            } catch (e) { /* storage unavailable */ }
+
+            function save() {
+                try { localStorage.setItem(SAVE_KEY, calc.serialize()); } catch (e) { /* ignore */ }
+            }
+
+            function showFlash(text) {
+                flash = text;
+                clearTimeout(flashTimer);
+                flashTimer = setTimeout(() => { flash = ''; render(); }, 1200);
+            }
+
+            function render() {
+                $('rT').textContent = format(calc.t);
+                $('rZ').textContent = format(calc.z);
+                $('rY').textContent = format(calc.y);
+                const xRow = $('xRow');
+                $('rX').textContent = calc.error ? calc.error.toUpperCase() : displayX(calc);
+                xRow.classList.toggle('typing', calc.entry !== null && !calc.error);
+                xRow.classList.toggle('error', !!calc.error);
+                $('fShift').classList.toggle('on', shifted);
+                $('fAngle').textContent = calc.angle;
+                $('fPending').textContent = calc.pending || 'STO';
+                $('fPending').classList.toggle('on', !!calc.pending);
+                $('fMsg').textContent = flash;
+                document.body.classList.toggle('shifted', shifted);
+                document.body.classList.toggle('pending', !!calc.pending);
+                save();
+            }
+
+            /** Dispatch a key: either an op name or a calculator method. */
+            function run(kind, name) {
+                if (kind === 'op') calc.op(name);
+                else if (kind === 'digit') calc.digit(name);
+                else calc[name]();
+            }
+
+            function press(btn) {
+                const d = btn.dataset;
+                if (d.act === 'shift') {
+                    shifted = !shifted;
+                    render();
+                    return;
                 }
-                
-                // Update stack: Drop T, shift Z->T, Y->Z, X->Y, result->X
-                stack = [stack[1], stack[2], stack[3], result];
-                currentInput = '0';
-                inputStarted = false;
-            } catch (e) {
-                currentInput = 'Error';
-                inputStarted = false;
+                const useAlt = shifted && (d.altOp || d.altAct);
+                shifted = false;
+                if (calc.pending && d.digit === undefined && d.act !== 'sto' && d.act !== 'rcl') calc.cancelPending();
+                if (useAlt) run(d.altOp ? 'op' : 'act', d.altOp || d.altAct);
+                else if (d.digit !== undefined) run('digit', d.digit);
+                else run(d.op ? 'op' : 'act', d.op || d.act);
+                render();
             }
-            
-            updateDisplay();
-        }
-        
-        // Initialize calculator
-        updateDisplay();
-        
-        // Keyboard support
-        document.addEventListener('keydown', function(event) {
-            const key = event.key;
-            
-            if (key >= '0' && key <= '9') {
-                inputDigit(key);
-            } else if (key === '.') {
-                inputDecimal();
-            } else if (key === 'Enter') {
-                enterValue();
-            } else if (key === '+') {
-                performOperation('+');
-            } else if (key === '-') {
-                performOperation('-');
-            } else if (key === '*') {
-                performOperation('*');
-            } else if (key === '/') {
-                performOperation('/');
-            } else if (key === 'Escape') {
-                clearAll();
-            } else if (key === 'Backspace') {
-                backspace();
-            } else if (key === 'c' || key === 'C') {
-                clearStack();
+
+            const keys = $('keys');
+            keys.addEventListener('click', e => {
+                const btn = e.target.closest('.key');
+                if (btn) press(btn);
+            });
+
+            function animate(btn) {
+                btn.classList.add('pressed');
+                setTimeout(() => btn.classList.remove('pressed'), 90);
             }
-        });
+
+            function find(sel) { return keys.querySelector(sel); }
+
+            const KEYMAP = {
+                'Enter': '[data-act="enter"]', '=': '[data-act="enter"]',
+                '+': '[data-op="+"]', '-': '[data-op="-"]', '*': '[data-op="*"]', 'x': '[data-op="*"]', '/': '[data-op="/"]',
+                '^': '[data-op="pow"]', '.': '[data-act="point"]', ',': '[data-act="point"]',
+                'Backspace': '[data-act="backspace"]', 'n': '[data-act="chs"]', 'e': '[data-act="eex"]',
+                's': '[data-act="swap"]', 'r': '[data-act="rollDown"]', 'q': '[data-op="sqrt"]', 'i': '[data-op="inv"]',
+                'f': '[data-act="shift"]', 'u': '[data-act="undo"]'
+            };
+
+            function copyX() {
+                const text = format(calc.x);
+                navigator.clipboard?.writeText(text).then(() => { showFlash('COPIED'); render(); }, () => {});
+            }
+
+            document.addEventListener('keydown', e => {
+                if (e.altKey || e.metaKey) return;
+                const key = e.key;
+                if (e.ctrlKey) {
+                    if (key.toLowerCase() === 'z') { e.preventDefault(); calc.undo(); render(); }
+                    else if (key.toLowerCase() === 'c' && !window.getSelection().toString()) { e.preventDefault(); copyX(); }
+                    return;
+                }
+                let btn = null;
+                if (/^[0-9]$/.test(key)) btn = find(`[data-digit="${key}"]`);
+                else if (key === '%') {
+                    calc.op('%'); shifted = false; e.preventDefault(); render(); return;
+                } else if (key === 'p') {
+                    calc.op('pi'); e.preventDefault(); render(); return;
+                } else if (key === 'l') {
+                    calc.lastx(); e.preventDefault(); render(); return;
+                } else if (key === 'Escape') {
+                    e.preventDefault();
+                    if (calc.pending) calc.cancelPending(); else calc.clx();
+                    shifted = false;
+                    render();
+                    return;
+                } else if (key === 'Delete') {
+                    e.preventDefault(); calc.clearAll(); render(); return;
+                } else if (key === 'Tab' && e.shiftKey) {
+                    btn = find('[data-act="shift"]');
+                } else {
+                    btn = KEYMAP[key] ? find(KEYMAP[key]) : null;
+                }
+                if (!btn) return;
+                // preventDefault also stops Enter/Space from clicking a focused button twice
+                e.preventDefault();
+                animate(btn);
+                press(btn);
+            });
+
+            document.addEventListener('paste', e => {
+                const text = e.clipboardData.getData('text').trim().replace(/,/g, '');
+                const v = Number(text);
+                if (text === '' || !isFinite(v)) { showFlash('NOT A NUMBER'); render(); return; }
+                e.preventDefault();
+                calc.constant(v);
+                render();
+            });
+
+            $('lcd').addEventListener('click', copyX);
+
+            render();
+        })();
     </script>
 </body>
 </html>
