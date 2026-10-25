@@ -56,6 +56,10 @@ Gold labels are second functions: press **SHIFT** (or `f`), then the key.
 | `f` | SHIFT |
 | `u` / `Ctrl+Z` | undo |
 
+## Install and offline use
+
+The page is a Progressive Web App. Your browser offers to install it (on a phone, use **Add to Home Screen**). After the first visit it also works offline: a service worker (`sw.js`) caches the app and refreshes it in the background, so updates appear on the next visit.
+
 ## Layout
 
 - `rpn.js` holds the calculator engine. It does not touch the DOM and can run under Node:
