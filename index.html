@@ -194,6 +194,88 @@
 
         sub, sup { font-size: 0.65em; line-height: 0; }
 
+        /* ---- soft menu ---- */
+
+        .menu { margin: -6px 2px 22px; }
+
+        .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+
+        .tabs button {
+            flex: 1;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            background: none;
+            border: 0;
+            border-bottom: 2px solid transparent;
+            padding: 3px 0;
+            cursor: pointer;
+        }
+
+        .tabs button[aria-selected="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+        .tabs button:focus-visible { outline: 2px solid var(--gold); }
+
+        .softkeys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 9px; padding-top: 14px; }
+        .softkeys.hexkeys { grid-template-columns: repeat(6, 1fr); padding-top: 10px; }
+        .softkeys[hidden] { display: none; }
+        .softkeys .key { height: 32px; font-size: 14px; background: linear-gradient(180deg, #3f4a52, #313a40); }
+        .softkeys .key[data-alt]::before { top: -15px; font-size: 11px; }
+        .softkeys .key.active { box-shadow: 0 0 0 2px var(--gold), 0 3px 0 var(--key-shade); }
+
+        /* ---- paper tape ---- */
+
+        .tape {
+            width: 100%;
+            max-width: 380px;
+            color: var(--text-dim);
+            font-size: 15px;
+        }
+
+        .tape summary {
+            cursor: pointer;
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tape-tools { margin-left: auto; display: flex; gap: 6px; }
+
+        .tape-tools button {
+            font: inherit;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            background: none;
+            border: 1px solid var(--body-edge);
+            border-radius: 4px;
+            padding: 0 8px;
+            cursor: pointer;
+        }
+
+        #tape {
+            list-style: none;
+            margin-top: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            background: #f4efe2;
+            color: #2b2a26;
+            border-radius: 4px;
+            padding: 10px 14px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 15px;
+            line-height: 1.45;
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #tape li { display: flex; justify-content: space-between; gap: 12px; }
+        #tape li.num { justify-content: flex-end; }
+        #tape li.op b { font-weight: normal; color: #8a5a10; }
+        #tape:empty::before { content: 'Operations will be printed here.'; color: #9b968a; }
+
         /* ---- help ---- */
 
         .help {
@@ -244,12 +326,26 @@
                 <span id="fShift">SHIFT</span>
                 <span id="fAngle" class="on">DEG</span>
                 <span id="fPending">STO</span>
+                <span id="fMode" class="on"></span>
+                <span id="fPrgm">PRGM</span>
                 <span class="msg" id="fMsg"></span>
             </div>
             <div class="reg"><b>T</b><span class="val" id="rT">0</span></div>
             <div class="reg"><b>Z</b><span class="val" id="rZ">0</span></div>
             <div class="reg"><b>Y</b><span class="val" id="rY">0</span></div>
             <div class="reg x" id="xRow"><b>X</b><span class="val" id="rX">0</span></div>
+        </div>
+
+        <div class="menu">
+            <div class="tabs" id="tabs" role="tablist">
+                <button data-tab="MODE" role="tab">MODE</button>
+                <button data-tab="STAT" role="tab">STAT</button>
+                <button data-tab="BASE" role="tab">BASE</button>
+                <button data-tab="LOGIC" role="tab">LOGIC</button>
+                <button data-tab="PRGM" role="tab">PRGM</button>
+            </div>
+            <div class="softkeys" id="softkeys"></div>
+            <div class="softkeys hexkeys" id="hexkeys" hidden></div>
         </div>
 
         <div class="keys" id="keys">
@@ -282,13 +378,13 @@
             <button class="key num" data-digit="6">6</button>
             <button class="key op" data-op="*">×</button>
 
-            <button class="key small" data-act="sto">STO</button>
+            <button class="key small" data-prefix="STO">STO</button>
             <button class="key num" data-digit="1">1</button>
             <button class="key num" data-digit="2">2</button>
             <button class="key num" data-digit="3">3</button>
             <button class="key op" data-op="-">−</button>
 
-            <button class="key small" data-act="rcl" data-alt="CLR ALL" data-alt-act="clearAll">RCL</button>
+            <button class="key small" data-prefix="RCL" data-alt="CLR ALL" data-alt-act="clearAll">RCL</button>
             <button class="key num" data-digit="0">0</button>
             <button class="key num" data-act="point">.</button>
             <button class="key small" data-act="clx">CLX</button>
@@ -296,12 +392,20 @@
         </div>
     </div>
 
+    <details class="tape" id="tapePanel">
+        <summary>PAPER TAPE <span class="tape-tools"><button id="tapeCopy" type="button">COPY</button><button id="tapeClear" type="button">CLEAR</button></span></summary>
+        <ol id="tape"></ol>
+    </details>
+
     <details class="help">
         <summary>HOW TO USE</summary>
         <h3>RPN IN ONE MINUTE</h3>
         <p>Enter the numbers first, then the operation. <b>2 ENTER 3 +</b> gives 5. For (3 + 4) × 5, press <b>3 ENTER 4 + 5 ×</b>. You never need brackets or an equals key.</p>
         <p>ENTER copies X into Y. An operation uses X and Y, and the stack drops: Z moves to Y, and T is copied into Z. Gold labels are second functions: press SHIFT, then the key.</p>
         <p>To store, press <b>STO</b> then a digit 0–9. <b>RCL</b> then a digit recalls it. Click the display to copy X. Your stack and memories are kept between visits.</p>
+        <h3>MENUS</h3>
+        <p><b>MODE</b>: STD, FIX n, SCI n and ENG n (press the key, then a digit) and DEG/RAD. <b>STAT</b>: Σ+ adds X to the statistics; x̄ is the mean, s the standard deviation. <b>BASE</b> and <b>LOGIC</b>: HEX/DEC/OCT/BIN integer modes (32-bit) with AND, OR, XOR, NOT and shifts; type A–F with the extra row or the keyboard.</p>
+        <p><b>PRGM</b>: press P/R and every key you press is recorded instead of run. Press P/R again to stop, then R/S runs the program. LBL n and GTO n make loops. SHIFT gives the tests x≠0?, x=0?, x≤y? and x&gt;y?; a false test skips the next step. R/S inside a program stops it. DEL removes the last step and SHIFT P/R clears the program.</p>
         <h3>KEYBOARD</h3>
         <table>
             <tr><td><kbd>0</kbd>–<kbd>9</kbd> <kbd>.</kbd></td><td>digits</td></tr>
@@ -322,7 +426,7 @@
     <script src="rpn.js"></script>
     <script>
         (() => {
-            const { RPN, format, displayX } = window.RPNCore;
+            const { RPN, displayX, stepLabel } = window.RPNCore;
             const SAVE_KEY = 'rpn_state';
             const calc = new RPN();
             let shifted = false;
@@ -346,29 +450,81 @@
                 flashTimer = setTimeout(() => { flash = ''; render(); }, 1200);
             }
 
+            const pad2 = n => String(n).padStart(2, '0');
+
             function render() {
-                $('rT').textContent = format(calc.t);
-                $('rZ').textContent = format(calc.z);
-                $('rY').textContent = format(calc.y);
                 const xRow = $('xRow');
-                $('rX').textContent = calc.error ? calc.error.toUpperCase() : displayX(calc);
+                if (calc.recording) {
+                    // Program mode: show the last steps instead of the stack
+                    const p = calc.program;
+                    const line = i => (i >= 0 ? `${pad2(i + 1)}  ${stepLabel(p[i])}` : '');
+                    $('rT').textContent = line(p.length - 4);
+                    $('rZ').textContent = line(p.length - 3);
+                    $('rY').textContent = line(p.length - 2);
+                    $('rX').textContent = calc.error ? calc.error.toUpperCase() : p.length ? line(p.length - 1) : '00  —';
+                } else {
+                    $('rT').textContent = calc.format(calc.t);
+                    $('rZ').textContent = calc.format(calc.z);
+                    $('rY').textContent = calc.format(calc.y);
+                    $('rX').textContent = calc.error ? calc.error.toUpperCase() : displayX(calc);
+                }
                 xRow.classList.toggle('typing', calc.entry !== null && !calc.error);
                 xRow.classList.toggle('error', !!calc.error);
                 $('fShift').classList.toggle('on', shifted);
                 $('fAngle').textContent = calc.angle;
                 $('fPending').textContent = calc.pending || 'STO';
                 $('fPending').classList.toggle('on', !!calc.pending);
+                $('fMode').textContent = calc.base !== 10 ? { 16: 'HEX', 8: 'OCT', 2: 'BIN' }[calc.base]
+                    : calc.disp.mode === 'STD' ? '' : `${calc.disp.mode} ${calc.disp.n}`;
+                $('fPrgm').textContent = calc.recording ? `PRGM ${calc.program.length}` : `PRGM`;
+                $('fPrgm').classList.toggle('on', calc.recording);
+                $('hexkeys').hidden = calc.base !== 16;
+                renderSoftkeys();
+                renderTape();
                 $('fMsg').textContent = flash;
                 document.body.classList.toggle('shifted', shifted);
                 document.body.classList.toggle('pending', !!calc.pending);
                 save();
             }
 
-            /** Dispatch a key: either an op name or a calculator method. */
-            function run(kind, name) {
-                if (kind === 'op') calc.op(name);
-                else if (kind === 'digit') calc.digit(name);
-                else calc[name]();
+            // ---- key dispatch ----
+            // Every key becomes an action: {s: step} goes through calc.key() (so it
+            // can be recorded in a program); {ui: name} is handled here.
+
+            const act = v => ({ s: { k: 'act', v } });
+            const op = v => ({ s: { k: 'op', v } });
+            const pre = v => ({ s: { k: 'prefix', v } });
+            const test = v => ({ s: { k: 'test', v } });
+
+            const UI = {
+                undo: () => calc.undo(),
+                prgm: () => calc.togglePrgm(),
+                clp: () => { calc.clearProgram(); showFlash('PROGRAM CLEARED'); },
+                del: () => calc.deleteStep(),
+                rs: () => {
+                    if (calc.recording) calc.key({ k: 'rs' });
+                    else { calc.run(); if (!calc.error) showFlash('DONE'); }
+                }
+            };
+
+            function doAction(a) {
+                if (!a) return;
+                if (a.ui) {
+                    calc.cancelPending();
+                    UI[a.ui]();
+                } else {
+                    calc.key(a.s);
+                }
+            }
+
+            /** Action for a main key button from its data attributes. */
+            function keyAction(d, alt) {
+                if (alt) return d.altOp ? op(d.altOp) : act(d.altAct);
+                if (d.digit !== undefined) return { s: { k: 'digit', v: d.digit } };
+                if (d.prefix) return pre(d.prefix);
+                if (d.op) return op(d.op);
+                if (d.act === 'undo') return { ui: 'undo' };
+                return act(d.act);
             }
 
             function press(btn) {
@@ -378,19 +534,133 @@
                     render();
                     return;
                 }
-                const useAlt = shifted && (d.altOp || d.altAct);
+                const useAlt = shifted && !!(d.altOp || d.altAct || d.soft);
                 shifted = false;
-                if (calc.pending && d.digit === undefined && d.act !== 'sto' && d.act !== 'rcl') calc.cancelPending();
-                if (useAlt) run(d.altOp ? 'op' : 'act', d.altOp || d.altAct);
-                else if (d.digit !== undefined) run('digit', d.digit);
-                else run(d.op ? 'op' : 'act', d.op || d.act);
+                if (d.soft !== undefined) {
+                    const item = MENUS[menu][+d.soft];
+                    doAction(useAlt && item.alt ? item.alt : item);
+                } else if (d.hex) {
+                    calc.key({ k: 'digit', v: d.hex });
+                } else {
+                    doAction(keyAction(d, useAlt && (d.altOp || d.altAct)));
+                }
                 render();
             }
 
             const keys = $('keys');
-            keys.addEventListener('click', e => {
+            document.querySelector('.calc').addEventListener('click', e => {
                 const btn = e.target.closest('.key');
                 if (btn) press(btn);
+            });
+
+            // ---- soft menus ----
+
+            const MENUS = {
+                MODE: [
+                    { l: 'STD', ...act('std') }, { l: 'FIX', ...pre('FIX') }, { l: 'SCI', ...pre('SCI') },
+                    { l: 'ENG', ...pre('ENG') }, { l: 'DEG/RAD', ...act('toggleAngle') }
+                ],
+                STAT: [
+                    { l: 'Σ+', ...act('sigmaPlus') }, { l: 'Σ−', ...act('sigmaMinus') }, { l: 'x̄', ...act('mean') },
+                    { l: 's', ...act('sdev') }, { l: 'CLΣ', ...act('clearStats') }
+                ],
+                BASE: [
+                    { l: 'HEX', ...act('hex') }, { l: 'DEC', ...act('dec') }, { l: 'OCT', ...act('oct') },
+                    { l: 'BIN', ...act('bin') }, { l: 'MOD', ...op('mod') }
+                ],
+                LOGIC: [
+                    { l: 'AND', ...op('and') }, { l: 'OR', ...op('or') }, { l: 'XOR', ...op('xor') },
+                    { l: 'NOT', ...op('not') }, { l: 'SL', ...op('shl'), alt: { l: 'SR', ...op('shr') } }
+                ],
+                PRGM: [
+                    { l: 'P/R', ui: 'prgm', alt: { l: 'CLP', ui: 'clp' } },
+                    { l: 'R/S', ui: 'rs', alt: { l: 'x≠0?', ...test('x≠0') } },
+                    { l: 'LBL', ...pre('LBL'), alt: { l: 'x=0?', ...test('x=0') } },
+                    { l: 'GTO', ...pre('GTO'), alt: { l: 'x≤y?', ...test('x≤y') } },
+                    { l: 'DEL', ui: 'del', alt: { l: 'x>y?', ...test('x>y') } }
+                ]
+            };
+
+            let menu = 'MODE';
+            try { menu = localStorage.getItem('rpn_menu') || 'MODE'; } catch (e) { /* ignore */ }
+            if (!MENUS[menu]) menu = 'MODE';
+
+            $('tabs').addEventListener('click', e => {
+                const tab = e.target.closest('[data-tab]');
+                if (!tab) return;
+                menu = tab.dataset.tab;
+                try { localStorage.setItem('rpn_menu', menu); } catch (err) { /* ignore */ }
+                render();
+            });
+
+            let softRendered = null;
+            function renderSoftkeys() {
+                document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === menu));
+                const box = $('softkeys');
+                if (softRendered !== menu) {
+                    box.textContent = '';
+                    MENUS[menu].forEach((item, i) => {
+                        const b = document.createElement('button');
+                        b.className = 'key';
+                        b.dataset.soft = i;
+                        b.textContent = item.l;
+                        if (item.alt) b.dataset.alt = item.alt.l;
+                        box.appendChild(b);
+                    });
+                    softRendered = menu;
+                }
+                // Highlight the active mode
+                box.querySelectorAll('.key').forEach((b, i) => {
+                    const l = MENUS[menu][i].l;
+                    b.classList.toggle('active',
+                        (menu === 'MODE' && l === calc.disp.mode) ||
+                        (menu === 'BASE' && l === { 16: 'HEX', 10: 'DEC', 8: 'OCT', 2: 'BIN' }[calc.base]) ||
+                        (menu === 'PRGM' && l === 'P/R' && calc.recording));
+                });
+            }
+
+            for (const h of 'ABCDEF') {
+                const b = document.createElement('button');
+                b.className = 'key';
+                b.dataset.hex = h;
+                b.textContent = h;
+                $('hexkeys').appendChild(b);
+            }
+
+            // ---- paper tape ----
+
+            let tapeLen = -1;
+            function renderTape() {
+                const t = calc.tape;
+                const last = t[t.length - 1];
+                const sig = t.length + ':' + (last ? last.op + last.x : '');
+                if (sig === tapeLen) return;
+                tapeLen = sig;
+                const ol = $('tape');
+                ol.textContent = '';
+                for (const e of t) {
+                    const li = document.createElement('li');
+                    if (e.num !== undefined) {
+                        li.className = 'num';
+                        li.textContent = e.num;
+                    } else {
+                        li.className = 'op';
+                        const b = document.createElement('b');
+                        b.textContent = e.op;
+                        const v = document.createElement('span');
+                        v.textContent = e.x;
+                        li.append(b, v);
+                    }
+                    ol.appendChild(li);
+                }
+                ol.scrollTop = ol.scrollHeight;
+            }
+
+            $('tapeClear').addEventListener('click', e => { e.preventDefault(); calc.clearTape(); render(); });
+            $('tapeCopy').addEventListener('click', e => {
+                e.preventDefault();
+                const text = calc.tape.map(x => (x.num !== undefined ? x.num : `${x.op}  = ${x.x}`)).join('\n');
+                navigator.clipboard?.writeText(text).then(() => { showFlash('TAPE COPIED'); render(); }, () => {});
             });
 
             function animate(btn) {
@@ -410,7 +680,7 @@
             };
 
             function copyX() {
-                const text = format(calc.x);
+                const text = calc.format(calc.x);
                 navigator.clipboard?.writeText(text).then(() => { showFlash('COPIED'); render(); }, () => {});
             }
 
@@ -424,12 +694,14 @@
                 }
                 let btn = null;
                 if (/^[0-9]$/.test(key)) btn = find(`[data-digit="${key}"]`);
-                else if (key === '%') {
-                    calc.op('%'); shifted = false; e.preventDefault(); render(); return;
+                else if (calc.base === 16 && /^[a-fA-F]$/.test(key)) {
+                    btn = document.querySelector(`[data-hex="${key.toUpperCase()}"]`);
+                } else if (key === '%') {
+                    calc.key({ k: 'op', v: '%' }); shifted = false; e.preventDefault(); render(); return;
                 } else if (key === 'p') {
-                    calc.op('pi'); e.preventDefault(); render(); return;
+                    calc.key({ k: 'op', v: 'pi' }); e.preventDefault(); render(); return;
                 } else if (key === 'l') {
-                    calc.lastx(); e.preventDefault(); render(); return;
+                    calc.key({ k: 'act', v: 'lastx' }); e.preventDefault(); render(); return;
                 } else if (key === 'Escape') {
                     e.preventDefault();
                     if (calc.pending) calc.cancelPending(); else calc.clx();
@@ -437,7 +709,7 @@
                     render();
                     return;
                 } else if (key === 'Delete') {
-                    e.preventDefault(); calc.clearAll(); render(); return;
+                    e.preventDefault(); calc.key({ k: 'act', v: 'clearAll' }); render(); return;
                 } else if (key === 'Tab' && e.shiftKey) {
                     btn = find('[data-act="shift"]');
                 } else {
@@ -455,7 +727,7 @@
                 const v = Number(text);
                 if (text === '' || !isFinite(v)) { showFlash('NOT A NUMBER'); render(); return; }
                 e.preventDefault();
-                calc.constant(v);
+                calc.constant(v, 'PASTE');
                 render();
             });
 

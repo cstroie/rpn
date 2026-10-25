@@ -3,7 +3,7 @@
  * Stale-while-revalidate: cached files load instantly and are refreshed
  * in the background, so an update shows up on the next visit.
  */
-const CACHE = 'rpn-v1';
+const CACHE = 'rpn-v2';
 const SHELL = [
     './',
     'index.html',
