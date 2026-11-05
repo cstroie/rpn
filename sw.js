@@ -1,9 +1,10 @@
 /*
  * Service worker: serves the app from cache so it works offline.
  * Stale-while-revalidate: cached files load instantly and are refreshed
- * in the background, so an update shows up on the next visit.
+ * in the background. A new worker waits until the page asks it to take over
+ * (see the update banner in index.html), so the user decides when to reload.
  */
-const CACHE = 'rpn-v3';
+const CACHE = 'rpn-v4';
 const SHELL = [
     './',
     'index.html',
@@ -17,7 +18,11 @@ const SHELL = [
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+    event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
+});
+
+self.addEventListener('message', event => {
+    if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
