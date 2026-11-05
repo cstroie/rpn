@@ -39,7 +39,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            min-height: 100vh;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
             background: radial-gradient(ellipse at 50% 0%, #2c2a26, var(--page) 70%) fixed;
             background-color: var(--page);
             color: var(--text);
@@ -47,23 +49,31 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 32px 16px;
-            gap: 24px;
+            justify-content: center;
+            padding: 8px;
         }
 
         .calc {
+            position: relative;
+            display: flex;
+            flex-direction: column;
             width: 100%;
             max-width: 380px;
+            max-height: 100%;
+            min-height: 0;
             background: linear-gradient(180deg, #34312c, var(--body));
             border: 1px solid var(--body-edge);
             border-radius: 22px;
-            padding: 20px 18px 22px;
+            padding: 16px 18px 20px;
             box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 24px 50px rgba(0, 0, 0, 0.6);
         }
 
         .brand {
             display: flex;
             align-items: baseline;
+            flex: none;
+            align-items: center;
+            gap: 6px;
             margin: 0 4px 12px;
             letter-spacing: 3px;
             font-size: 13px;
@@ -72,6 +82,7 @@
         }
 
         .brand span { color: var(--text-dim); letter-spacing: 2px; font-weight: 500; margin-right: auto; margin-left: 10px; }
+        .brand .share { margin: 0; }
 
         .share {
             font: inherit;
@@ -85,7 +96,7 @@
             cursor: pointer;
         }
 
-        .share:hover { color: var(--gold); border-color: var(--gold); }
+        .share:hover, .share[aria-expanded="true"] { color: var(--gold); border-color: var(--gold); }
 
         /* ---- LCD ---- */
 
@@ -98,6 +109,7 @@
             font-family: 'Share Tech Mono', ui-monospace, monospace;
             cursor: copy;
             user-select: none;
+            flex: none;
             margin: 6px 6px 22px;
         }
 
@@ -143,12 +155,17 @@
         .keys {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 1fr;
             gap: 18px 9px;
+            flex: 1 1 auto;
+            min-height: 0;
         }
 
         .key {
             position: relative;
-            height: 44px;
+            height: 100%;
+            min-height: 26px;
+            max-height: 46px;
             border: 0;
             border-radius: 7px;
             background: linear-gradient(180deg, var(--key-top), var(--key));
@@ -196,7 +213,7 @@
 
         /* ---- soft menu ---- */
 
-        .menu { margin: -6px 2px 22px; }
+        .menu { flex: none; margin: -6px 2px 22px; }
 
         .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
 
@@ -220,26 +237,39 @@
         .softkeys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px 9px; padding-top: 14px; }
         .softkeys.hexkeys { grid-template-columns: repeat(6, 1fr); padding-top: 10px; }
         .softkeys[hidden] { display: none; }
-        .softkeys .key { height: 32px; font-size: 14px; background: linear-gradient(180deg, #3f4a52, #313a40); }
+        .softkeys .key { height: 32px; max-height: none; font-size: 14px; background: linear-gradient(180deg, #3f4a52, #313a40); }
         .softkeys .key[data-alt]::before { top: -15px; font-size: 11px; }
         .softkeys .key.active { box-shadow: 0 0 0 2px var(--gold), 0 3px 0 var(--key-shade); }
 
-        /* ---- paper tape ---- */
+        /* ---- overlay panels (help, paper tape) ---- */
 
-        .tape {
-            width: 100%;
-            max-width: 380px;
-            color: var(--text-dim);
+        .panel {
+            position: absolute;
+            inset: 48px 8px 8px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--body);
+            border: 1px solid var(--body-edge);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
             font-size: 15px;
+            line-height: 1.5;
+            color: var(--text-dim);
         }
 
-        .tape summary {
-            cursor: pointer;
+        .panel[hidden] { display: none; }
+
+        .panel-head {
+            flex: none;
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
             color: var(--text);
             font-weight: 600;
             letter-spacing: 1px;
-            display: flex;
-            align-items: center;
         }
 
         .tape-tools { margin-left: auto; display: flex; gap: 6px; }
@@ -257,9 +287,9 @@
         }
 
         #tape {
+            flex: 1;
+            min-height: 0;
             list-style: none;
-            margin-top: 10px;
-            max-height: 260px;
             overflow-y: auto;
             background: #f4efe2;
             color: #2b2a26;
@@ -278,26 +308,11 @@
 
         /* ---- help ---- */
 
-        .help {
-            width: 100%;
-            max-width: 380px;
-            font-size: 15px;
-            line-height: 1.5;
-            color: var(--text-dim);
-        }
-
-        .help summary {
-            cursor: pointer;
-            color: var(--text);
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        .help h3 { color: var(--text); font-size: 15px; margin: 14px 0 4px; letter-spacing: 1px; }
-        .help p { margin-bottom: 6px; }
-        .help table { width: 100%; border-collapse: collapse; }
-        .help td { padding: 2px 0; vertical-align: top; }
-        .help td:first-child { width: 42%; }
+        .panel h3 { color: var(--text); font-size: 15px; margin: 14px 0 4px; letter-spacing: 1px; }
+        .panel p { margin-bottom: 6px; }
+        .panel table { width: 100%; border-collapse: collapse; }
+        .panel td { padding: 2px 0; vertical-align: top; }
+        .panel td:first-child { width: 42%; }
         kbd {
             font-family: 'Share Tech Mono', monospace;
             font-size: 13px;
@@ -308,18 +323,30 @@
         }
 
         @media (max-width: 400px) {
-            body { padding: 16px 10px; }
-            .calc { padding: 16px 12px 18px; border-radius: 18px; }
+            body { padding: 4px; }
+            .calc { padding: 12px 12px 14px; border-radius: 18px; }
             .keys { gap: 17px 7px; }
-            .key { height: 42px; font-size: 16px; }
+            .key { font-size: 16px; }
             .key.num { font-size: 19px; }
             .reg.x { font-size: 30px; }
+        }
+
+        @media (max-height: 720px) {
+            .calc { padding: 10px 14px 12px; }
+            .brand { margin-bottom: 6px; }
+            .lcd { margin: 4px 6px 14px; padding: 6px 12px 8px; }
+            .reg { line-height: 1.2; }
+            .reg.x { font-size: 28px; }
+            .menu { margin-bottom: 14px; }
+            .keys { gap: 14px 8px; }
+            .key[data-alt]::before { top: -14px; font-size: 11px; }
+            .panel { inset: 40px 6px 6px; }
         }
     </style>
 </head>
 <body>
     <div class="calc">
-        <div class="brand">RPN-4 <span>SCIENTIFIC</span><button class="share" id="shareBtn" title="Copy a link to this stack and memory">SHARE</button></div>
+        <div class="brand">RPN-4 <span>SCIENTIFIC</span><button class="share" id="helpBtn" type="button" aria-expanded="false" aria-controls="helpPanel" title="How to use">HELP</button><button class="share" id="tapeBtn" type="button" aria-expanded="false" aria-controls="tapePanel" title="Paper tape">TAPE</button><button class="share" id="shareBtn" title="Copy a link to this stack and memory">SHARE</button></div>
 
         <div class="lcd" id="lcd" title="Click to copy X">
             <div class="flags">
@@ -390,15 +417,14 @@
             <button class="key small" data-act="clx">CLX</button>
             <button class="key op" data-op="+">+</button>
         </div>
-    </div>
 
-    <details class="tape" id="tapePanel">
-        <summary>PAPER TAPE <span class="tape-tools"><button id="tapeCopy" type="button">COPY</button><button id="tapeClear" type="button">CLEAR</button></span></summary>
-        <ol id="tape"></ol>
-    </details>
+        <section class="panel" id="tapePanel" hidden>
+            <div class="panel-head">PAPER TAPE <span class="tape-tools"><button id="tapeCopy" type="button">COPY</button><button id="tapeClear" type="button">CLEAR</button></span></div>
+            <ol id="tape"></ol>
+        </section>
 
-    <details class="help">
-        <summary>HOW TO USE</summary>
+        <section class="panel" id="helpPanel" hidden>
+            <div class="panel-head">HOW TO USE</div>
         <h3>RPN IN ONE MINUTE</h3>
         <p>Enter the numbers first, then the operation. <b>2 ENTER 3 +</b> gives 5. For (3 + 4) × 5, press <b>3 ENTER 4 + 5 ×</b>. You never need brackets or an equals key.</p>
         <p>ENTER copies X into Y. An operation uses X and Y, and the stack drops: Z moves to Y, and T is copied into Z. Gold labels are second functions: press SHIFT, then the key.</p>
@@ -421,7 +447,8 @@
             <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>undo</td></tr>
             <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> / <kbd>V</kbd></td><td>copy X / paste a number</td></tr>
         </table>
-    </details>
+        </section>
+    </div>
 
     <script src="rpn.js"></script>
     <script>
@@ -684,9 +711,28 @@
                 navigator.clipboard?.writeText(text).then(() => { showFlash('COPIED'); render(); }, () => {});
             }
 
+            // ---- overlay panels ----
+
+            const panels = { help: ['helpBtn', 'helpPanel'], tape: ['tapeBtn', 'tapePanel'] };
+
+            function openPanel(name) {
+                for (const [n, [btn, panel]] of Object.entries(panels)) {
+                    const open = n === name && $(panel).hidden;
+                    $(panel).hidden = !open;
+                    $(btn).setAttribute('aria-expanded', String(open));
+                    if (open && n === 'tape') $('tape').scrollTop = $('tape').scrollHeight;
+                }
+            }
+
+            function panelOpen() { return Object.values(panels).some(([, p]) => !$(p).hidden); }
+
+            $('helpBtn').addEventListener('click', () => openPanel('help'));
+            $('tapeBtn').addEventListener('click', () => openPanel('tape'));
+
             document.addEventListener('keydown', e => {
                 if (e.altKey || e.metaKey) return;
                 const key = e.key;
+                if (key === 'Escape' && panelOpen()) { e.preventDefault(); openPanel(null); return; }
                 if (e.ctrlKey) {
                     if (key.toLowerCase() === 'z') { e.preventDefault(); calc.undo(); render(); }
                     else if (key.toLowerCase() === 'c' && !window.getSelection().toString()) { e.preventDefault(); copyX(); }

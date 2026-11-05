@@ -64,7 +64,7 @@ Press **P/R** and the keys you press are recorded as program steps instead of be
 
 ### Paper tape
 
-The **PAPER TAPE** panel below the calculator prints every number entered and every operation with its result, like a printing calculator. You can copy it as text.
+The **TAPE** button in the header opens a paper tape panel over the calculator, which prints every number entered and every operation with its result, like a printing calculator. You can copy it as text.
 
 ## Keyboard
 
